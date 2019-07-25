@@ -4,7 +4,7 @@ const MongoClient = mongodb.MongoClient;
 let _db;
 
 const mongoConnect = (callBack) => {
-  MongoClient.connect('mongodb+srv://nodecomplete:Ooz0LDFVRV7FmUK2@cluster-test-te9za.mongodb.net/shop?retryWrites=true&w=majority";')
+  MongoClient.connect('mongodb+srv://nodecomplete:Ooz0LDFVRV7FmUK2@cluster-test-te9za.mongodb.net/shop?retryWrites=true&w=majority";',{ useNewUrlParser: true })
   // we can change the database name in this part mongodb+srv://nodecomplete:Ooz0LDFVRV7FmUK2@cluster-test-te9za.mongodb.net/<Database name>?retryWrites=true&w=majority";
   // or we can pass the database name to _db = client.db(database name)
   .then(client => {

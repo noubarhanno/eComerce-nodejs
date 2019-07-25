@@ -5,6 +5,9 @@ const bodyParser = require('body-parser');
 
 const errorController = require('./controllers/error');
 
+//models
+const User = require('./models/user');
+
 //mongo db connection
 const mongoConnect = require('./util/database').mongoConnect;
 
@@ -15,24 +18,22 @@ app.set('view engine', 'ejs');
 app.set('views', 'views');
 
 const adminRoutes = require('./routes/admin');
-// const shopRoutes = require('./routes/shop');
+const shopRoutes = require('./routes/shop');
 
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
-    // User.findByPk(1).then(user => {
-    //     req.user = user;
-    //     // this will attach the user object to each request
-    //     // and this user is not a user object fetched from the database
-    //     // it's a sequelize object that can execute a method on like destroy foe example
-    //     next();
-    // }).catch(err => console.log(err));
-    next();
+    User.findById("5d38715827ff766abe1c2e00")
+      .then(user => {
+        req.user = new User(user.name, user.email, user.cart, user._id);
+        next();
+      })
+      .catch(err => console.log(err));
 });
 
 app.use('/admin', adminRoutes);
-// app.use(shopRoutes);
+app.use(shopRoutes);
 
 app.use(errorController.get404);
 
