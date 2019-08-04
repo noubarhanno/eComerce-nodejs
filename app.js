@@ -3,13 +3,23 @@ const path = require("path");
 const express = require("express");
 const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
+const session = require('express-session');
+const mongodbStore = require('connect-mongodb-session')(session);
 
 const errorController = require("./controllers/error");
 
 //models
 const User = require("./models/user");
 
+const MONGODB_URI = 'mongodb+srv://nodecomplete:kwCfeRS4lKG71qcW@cluster-test-te9za.mongodb.net/shop?retryWrites=true&w=majority';
+
 const app = express();
+
+// prepare the session in the database
+const store = new mongodbStore({
+  uri: MONGODB_URI,
+  collection: 'sessions'
+});
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -19,18 +29,17 @@ const adminRoutes = require("./routes/admin");
 const shopRoutes = require("./routes/shop");
 const authRoute = require('./routes/auth');
 
+// middleware
 app.use(bodyParser.urlencoded({ extended: false }));
 app.use(express.static(path.join(__dirname, "public")));
-
-app.use((req, res, next) => {
-  User.findById("5d39d5de9ecc532af6b8d00a")
-    .then(user => {
-      // req.user = new User(user.name, user.email, user.cart, user._id);
-      req.user = user; // we save it like this because now we have mongoose object which let us access all the user object 
-      next();
-    })
-    .catch(err => console.log(err));
-});
+app.use(
+  session({
+    secret: "my secret",
+    resave: false,
+    saveUninitialized: false,
+    store: store
+  }) // resave and saveUninitialized to ensure will not save the session in every request unless we have changed something in the request
+);
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);
@@ -40,7 +49,7 @@ app.use(errorController.get404);
 
 mongoose
   .connect(
-    "mongodb+srv://nodecomplete:kwCfeRS4lKG71qcW@cluster-test-te9za.mongodb.net/shop?retryWrites=true&w=majority",
+    MONGODB_URI,
     { useNewUrlParser: true }
   )
   .then(result => {
