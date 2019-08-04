@@ -39,7 +39,6 @@ exports.getProduct = (req, res, next) => {
 exports.getIndex = (req, res, next) => {
   Product.find()
     .then(products => {
-      console.log(products)
       res.render("shop/index", {
         prods: products,
         pageTitle: "Shop",
@@ -53,7 +52,6 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  console.log(req.session.user.cart.items);
   req.user
     .populate('cart.items.productId')
     .execPopulate()
@@ -75,7 +73,7 @@ exports.postCart = (req, res, next) => {
     .then(product => {
       req.user // we add a middleware in app.js to fetch the user object of mongoose which has all the methods inside and store it to the request as the session doesn't store methods
         .addToCart(product) // this will work but not throught the mongodb driver and the method that we write for this logic but through the method we  added to mongoose schema UserSchema
-        .then(result => console.log(result))
+        .then(result => {})
         .catch(err => console.log(err));
     })
     .then(result => {
@@ -104,7 +102,7 @@ exports.postOrder = (req, res, next) => {
       })
       const order = new Order({
         user: {
-          name: req.session.user.name,
+          name: req.session.user.email,
           userId: req.session.user // automatically mongoose will take the user Id
         },
         products: products

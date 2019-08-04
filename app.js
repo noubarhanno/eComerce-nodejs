@@ -64,18 +64,6 @@ mongoose
     { useNewUrlParser: true }
   )
   .then(result => {
-    User.findOne().then(user => {
-      if (!user){
-        const user = new User({
-          name: 'noubar',
-          email: 'noubar@noubar.com',
-          cart:{
-            items: []
-          }
-        });
-        user.save();
-      }
-    })
     app.listen(3000);
     console.log("connected");
   })

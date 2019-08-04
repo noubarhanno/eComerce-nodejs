@@ -1,4 +1,5 @@
 const User = require('../models/user');
+const bcrypt = require('bcryptjs');
 
 exports.getLogin = (req, res, next) => {
   res.render('auth/login', {
@@ -17,15 +18,28 @@ exports.getSignup = (req, res, next) => {
 };
 
 exports.postLogin = (req, res, next) => {
-  User.findById('5d39d5de9ecc532af6b8d00a')
+  const email = req.body.email;
+  const password = req.body.password;
+  User.findOne({email: email})
     .then(user => {
-        console.log(user);
-      req.session.isLoggedin = true;
-      req.session.user = user;
-      req.session.save(err => {
-        console.log(err);
+      if (!user){
+        return res.redirect('/login');
+      }
+      bcrypt.compare(password, user.password).then(doMatch => {
+        if (doMatch){
+          req.session.isLoggedin = true;
+          req.session.user = user;
+          return req.session.save(err => {
+            console.log(err);
+            res.redirect('/');
+          });
+        }
         res.redirect('/');
-      });
+      }).catch(err => {
+        console.log(err);
+        res.redirect('/login');
+      })
+      
     })
     .catch(err => console.log(err));
 };
@@ -38,15 +52,20 @@ exports.postSignup = (req, res, next) => {
         if (userDoc){
             return res.redirect('/signup');
         }
-        const user = new User({
+        return bcrypt.hash(password, 12)
+        .then(hashedPassword => {
+          const user = new User({
             email: email,
-            password: password,
+            password: hashedPassword,
             cart: { items: []}
         });
         return user.save();
-    }).then(result => {
-        res.redirect('/login');
-    }).catch(err => console.log(err));
+        })
+        .then(result => {
+            res.redirect('/login');
+        })
+    })
+    .catch(err => console.log(err));
 };
 
 exports.postLogout = (req, res, next) => {
