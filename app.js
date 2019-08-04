@@ -5,6 +5,8 @@ const bodyParser = require("body-parser");
 const mongoose = require("mongoose");
 const session = require('express-session');
 const mongodbStore = require('connect-mongodb-session')(session);
+const csrf = require('csurf');
+const flash = require('connect-flash');
 
 const errorController = require("./controllers/error");
 
@@ -20,6 +22,9 @@ const store = new mongodbStore({
   uri: MONGODB_URI,
   collection: 'sessions'
 });
+
+const csrfProtection = csrf();
+app.use(flash());
 
 app.set("view engine", "ejs");
 app.set("views", "views");
@@ -40,6 +45,8 @@ app.use(
     store: store
   }) // resave and saveUninitialized to ensure will not save the session in every request unless we have changed something in the request
 );
+
+app.use(csrfProtection);
 app.use((req, res, next) => {
   if(!req.session.user){
     return next();
@@ -50,6 +57,12 @@ app.use((req, res, next) => {
       next();
     })
     .catch(err => console.log(err));
+})
+
+app.use((req,res,next) => {
+  res.locals.isAuthenticated= req.session.isLoggedin;
+  res.locals.csrfToken = req.csrfToken();
+  next();
 })
 
 app.use("/admin", adminRoutes);
