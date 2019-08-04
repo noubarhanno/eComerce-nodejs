@@ -40,6 +40,17 @@ app.use(
     store: store
   }) // resave and saveUninitialized to ensure will not save the session in every request unless we have changed something in the request
 );
+app.use((req, res, next) => {
+  if(!req.session.user){
+    return next();
+  }
+  User.findById(req.session.user._id)
+    .then(user => {
+      req.user = user;
+      next();
+    })
+    .catch(err => console.log(err));
+})
 
 app.use("/admin", adminRoutes);
 app.use(shopRoutes);

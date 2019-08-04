@@ -53,13 +53,9 @@ exports.getIndex = (req, res, next) => {
 };
 
 exports.getCart = (req, res, next) => {
-  // we don't need to use the method we created when we used mongo driver
   console.log(req.session.user.cart.items);
-  req.session.user
+  req.user
     .populate('cart.items.productId')
-    // to have a promise for the population method we need to call execPopulate ,
-    // populate will automatically look in the path you give her and go to the same table that has this path and populate all the data nested in the path key you provide 
-    // and you can provide what data you want to populate in the second argument
     .execPopulate()
     .then(user => {
       const products = user.cart.items;
@@ -77,8 +73,7 @@ exports.postCart = (req, res, next) => {
   const prodId = req.body.productId;
   Product.findById(prodId)
     .then(product => {
-      console.log(product)
-      req.session.user
+      req.user // we add a middleware in app.js to fetch the user object of mongoose which has all the methods inside and store it to the request as the session doesn't store methods
         .addToCart(product) // this will work but not throught the mongodb driver and the method that we write for this logic but through the method we  added to mongoose schema UserSchema
         .then(result => console.log(result))
         .catch(err => console.log(err));
@@ -91,7 +86,7 @@ exports.postCart = (req, res, next) => {
 
 exports.postCartDeleteProduct = (req, res, next) => {
   const prodId = req.body.productId;
-  req.session.user
+  req.user
     .removeFromCart(prodId)
     .then(result => {
       res.redirect("/cart");
@@ -100,7 +95,7 @@ exports.postCartDeleteProduct = (req, res, next) => {
 };
 
 exports.postOrder = (req, res, next) => {
-  req.session.user
+  req.user
     .populate('cart.items.productId')
     .execPopulate()
     .then(user => {
@@ -117,7 +112,7 @@ exports.postOrder = (req, res, next) => {
       return order.save();
     })
   .then(result => {
-    return req.session.user.clearCart();
+    return req.user.clearCart();
   }).then(result => {
     res.redirect("/orders");
   })
